@@ -42,10 +42,13 @@ def threshold_image(gray: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Binary mask (nuclei = 1, background = 0)
     """
-    _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    # Adaptive thresholding
+    binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 301, 10)
+
     # Convert to 0 and 1
     binary = binary // 255
-    binary_corrected = 1 - binary
+    binary_corrected = 1-binary
     return binary_corrected
 
 def label_nuclei(binary: np.ndarray) -> np.ndarray:
@@ -67,7 +70,7 @@ def threshold_segmentation(image: np.ndarray) -> np.ndarray:
     binary = threshold_image(blurred)
     labeled = label_nuclei(binary)
     colored = label2rgb(labeled, bg_label=0)
-    return colored
+    return labeled, colored
 
 def watershed_segmentation(image: np.ndarray) -> np.ndarray:
     """
@@ -75,8 +78,7 @@ def watershed_segmentation(image: np.ndarray) -> np.ndarray:
     
     Parameters:
         image (np.ndarray): RGB input image
-        min_size (int): Minimum size of nuclei to keep (remove small noise)
-        
+
     Returns:
         np.ndarray: Labeled mask (0 = background, 1,2,... = nuclei)
     """
@@ -84,12 +86,13 @@ def watershed_segmentation(image: np.ndarray) -> np.ndarray:
     blurred = smooth_image(gray)
     binary = threshold_image(blurred)
     distance = ndi.distance_transform_edt(binary)
+    distance_smooth = cv2.GaussianBlur(distance, (15,15), 0)
 
-    coords = peak_local_max(distance, min_distance = 10, labels=binary, footprint=np.ones((3, 3)))
+    coords = peak_local_max(distance_smooth, min_distance = 30, labels=binary, footprint=np.ones((5, 5)))
     markers = np.zeros_like(distance, dtype=int)
     for i, (y, x) in enumerate(coords, 1):
         markers[y, x] = i
     
     labeled = watershed(-distance, markers, mask=binary)
     colored = label2rgb(labeled, bg_label=0)
-    return colored
+    return labeled, colored
