@@ -112,14 +112,16 @@ def classify_nuclei_by_brownness(image: np.ndarray, labeled: np.ndarray) -> np.n
         np.ndarray: RGB image with nuclei outlines colored by class
     """
 
-    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
+    gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) # 0: black, 255: white
     props = regionprops(labeled, intensity_image=gray)
 
     # Collect mean intensity of each nucleus
     mean_intensities = np.array([region.mean_intensity for region in props])
 
     # Define thresholds for classes
-    thresholds = np.percentile(mean_intensities, [15, 30, 65])
+    thresholds_percentile = np.percentile(mean_intensities, [30, 55, 75])
+    thresholds = [80,120,170]
+    
     # Classes: 0,1,2,3
     classes = np.digitize(mean_intensities, bins=thresholds)
 

@@ -1,7 +1,11 @@
 import cv2
 import numpy as np
+import time
+
 from segmentation import threshold_segmentation, watershed_segmentation
 from classification import classify_nuclei_by_brownness
+from parallel import process_image_in_parallel
+
 
 def load_image(path: str) -> np.ndarray:
     """
@@ -58,3 +62,19 @@ def segment_and_classify(source: str, output: str) -> None:
 
     # Save the output
     save_image(output, classified_image)
+
+
+def segment_and_classify_large(source: str, output: str, tile_size=2000, overlap=200, workers=None) -> None:
+    image = load_image(source)
+    classified_image = process_image_in_parallel(image, tile_size=tile_size, overlap=overlap, max_workers=workers)
+    save_image(output, classified_image)
+
+
+if __name__ == "__main__":
+    start_time = time.time()
+
+    segment_and_classify_large("../example/input.jpg", "../notebooks/classified_output_parallel.jpg")
+
+    end_time = time.time()
+    elapsed = end_time - start_time
+    print(f"Processing time: {elapsed:.2f} seconds")
