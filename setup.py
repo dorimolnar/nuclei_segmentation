@@ -12,7 +12,6 @@ setup(
         "numpy",
         "scikit-image",
         "opencv-python",
-        "matplotlib",
-        "pandas"
+        "matplotlib"
     ],
 )

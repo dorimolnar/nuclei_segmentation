@@ -15,21 +15,6 @@ CLASS_COLORS = {
 }
 
 
-def get_nucleus_outline(coords, mask_shape):
-    # coords = region.coords
-    # Create a binary mask for this nucleus
-    mask = np.zeros(mask_shape, dtype=np.uint8)
-    mask[coords[:,0], coords[:,1]] = 1
-    
-    # Find contours
-    contours = measure.find_contours(mask, 0.5)  # 0.5 threshold
-    if len(contours) == 0:
-        return np.array([]), np.array([])
-    
-    # Take the longest contour (largest perimeter)
-    contour = max(contours, key=lambda x: x.shape[0])
-    rr, cc = contour[:,0].astype(int), contour[:,1].astype(int)
-    return rr, cc
 
 def smooth_contour(contour, sigma=10, pts=200):
     # Ensure closed curve
@@ -43,8 +28,8 @@ def smooth_contour(contour, sigma=10, pts=200):
         kind = "cubic"
 
     # Close the contour if needed
-    if not np.allclose(contour[0], contour[-1]):
-        contour = np.vstack([contour, contour[0]])
+    # if not np.allclose(contour[0], contour[-1]):
+    #     contour = np.vstack([contour, contour[0]])
 
     # Interpolate to make uniformly sampled curve
     t = np.linspace(0, 1, len(contour))
@@ -62,23 +47,54 @@ def smooth_contour(contour, sigma=10, pts=200):
     smoothed = np.stack([x_s, y_s], axis=1).astype(np.int32)
     return smoothed.reshape(-1, 1, 2)
 
-def draw_nucleus_outline(image, coords, color, thickness=2):
+def draw_nucleus_outline(image, coords, bbox, color, method='contour', thickness=2):
+
+    (min_r, min_c, max_r, max_c) = bbox
+    h = max_r - min_r
+    w = max_c - min_c
+ 
     # Create a binary mask for this nucleus
-    mask = np.zeros(image.shape[:2], dtype=np.uint8)
-    mask[coords[:,0], coords[:,1]] = 1
+    mask = np.zeros((h,w), dtype=np.uint8)
+
+    # Shift coordinates to local bounding box
+    local_coords = coords.copy()
+    local_coords[:, 0] -= min_r
+    local_coords[:, 1] -= min_c
+
+    mask[local_coords[:, 0], local_coords[:, 1]] = 1
     
-    
+    # Smooth the mask to reduce noise
     kernel = np.ones((5, 5), np.uint8)
     mask_smooth = cv2.morphologyEx(mask, cv2.MORPH_OPEN, kernel)
     mask_smooth = cv2.morphologyEx(mask_smooth, cv2.MORPH_CLOSE, kernel)
 
-    contours, _ = cv2.findContours(mask_smooth, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    if len(contours) == 0:
-        return
-    contour = max(contours, key=lambda c: c.shape[0])
-    cnt_smooth = smooth_contour(contour, sigma=10)
+    if method == 'contour':
+        contours, _ = cv2.findContours(mask_smooth, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+        if len(contours) == 0:
+            return
+        outline = max(contours, key=lambda c: c.shape[0])
 
-    cv2.drawContours(image, [cnt_smooth], -1, color, thickness)
+    elif method == 'conv_hull':
+        ys, xs = np.where(mask_smooth > 0)
+        pts = np.column_stack([xs, ys])
+        outline = cv2.convexHull(pts)
+        if outline is None:
+            return
+    else:
+        raise ValueError(f"Unknown method: {method}")
+    
+    # Discard too short outlines
+    if outline.shape[0] < 10:
+        return
+
+    # Smooth the contour
+    outline_smooth = smooth_contour(outline, sigma=10)
+
+    # Shift back to original image coordinates
+    outline_smooth[:, 0, 0] += min_c  
+    outline_smooth[:, 0, 1] += min_r 
+
+    cv2.drawContours(image, [outline_smooth], -1, color, thickness)
 
     # Gives sharp outlines
     # approx = cv2.approxPolyDP(contour_int, 5.0, True)
@@ -90,10 +106,10 @@ def classify_nuclei_by_brownness(image: np.ndarray, labeled: np.ndarray) -> np.n
 
     Parameters:
         image (np.ndarray): RGB original image
-        labeled_mask (np.ndarray): Labeled mask (0=background, 1,2,...=nuclei)
+        labeled (np.ndarray): Labeled image (0=background, 1,2,...=nuclei)
 
     Returns:
-        np.ndarray: RGB image with outlines colored by class
+        np.ndarray: RGB image with nuclei outlines colored by class
     """
 
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
@@ -107,23 +123,13 @@ def classify_nuclei_by_brownness(image: np.ndarray, labeled: np.ndarray) -> np.n
     # Classes: 0,1,2,3
     classes = np.digitize(mean_intensities, bins=thresholds)
 
-    # Prepare output image (copy of original or blank)
+    # Prepare output image
     output = image.copy()
 
-    # Draw outlines
-    # for region, cls in zip(props, classes):
-    #     # Coordinates of the nucleus
-    #     coords = region.coords
-    #     # Convert coords to polygon perimeter
-    #     rr, cc = get_nucleus_outline(coords, mask_shape=labeled.shape)
-    #     # Assign color
-    #     color = CLASS_COLORS[cls]
-    #     # Draw on output image
-    #     output[rr, cc] = color
-
-    for region, cls in zip(props, classes):
+    for region, class_id in zip(props, classes):
         coords = region.coords
-        color = CLASS_COLORS[cls]
-        draw_nucleus_outline(output, coords, color=color, thickness=2)
+        bbox = region.bbox
+        color = CLASS_COLORS[class_id]
+        draw_nucleus_outline(output, coords, bbox, color=color, method ='contour', thickness=2)
 
     return output

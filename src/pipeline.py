@@ -1,5 +1,7 @@
 import cv2
 import numpy as np
+from segmentation import threshold_segmentation, watershed_segmentation
+from classification import classify_nuclei_by_brownness
 
 def load_image(path: str) -> np.ndarray:
     """
@@ -35,3 +37,24 @@ def save_image(path: str, image: np.ndarray) -> None:
         cv2.imwrite(path, bgr_image)
     except Exception as e:
         raise IOError(f"An error occurred while saving the image: {e}")
+
+def segment_and_classify(source: str, output: str) -> None:
+    """
+    Segments and classifies nuclei in the given image.
+
+    Parameters:
+        source (str): Path to the input image.
+        output (str): Path to the output image.
+    """
+    image = load_image(source)
+
+    # Crop the image
+    crop_size = 2000
+    image = image[:crop_size, :crop_size, :]
+
+    # Perform segmentation and classification
+    seg_labeled_image, seg_colored_image = watershed_segmentation(image, 'adaptive')
+    classified_image = classify_nuclei_by_brownness(image, seg_labeled_image)
+
+    # Save the output
+    save_image(output, classified_image)

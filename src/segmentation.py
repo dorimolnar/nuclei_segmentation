@@ -32,9 +32,9 @@ def smooth_image(gray: np.ndarray, kernel_size: int = 5) -> np.ndarray:
     blurred = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
     return blurred
 
-def threshold_image(gray: np.ndarray) -> np.ndarray:
+def threshold_image(gray: np.ndarray, thr_method: str) -> np.ndarray:
     """
-    Apply Otsu thresholding to grayscale image.
+    Apply Otsu/Adaptive thresholding to grayscale image.
     
     Parameters:
         gray (np.ndarray): Grayscale image
@@ -42,14 +42,14 @@ def threshold_image(gray: np.ndarray) -> np.ndarray:
     Returns:
         np.ndarray: Binary mask (nuclei = 1, background = 0)
     """
-    # _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-    # Adaptive thresholding
-    binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 301, 10)
+    if thr_method == 'otsu':
+        _, binary = cv2.threshold(gray, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+    else:
+        binary = cv2.adaptiveThreshold(gray, 255, cv2.ADAPTIVE_THRESH_GAUSSIAN_C, cv2.THRESH_BINARY, 301, 10)
 
     # Convert to 0 and 1
-    binary = binary // 255
-    binary_corrected = 1-binary
-    return binary_corrected
+    binary = 1 - (binary // 255)
+    return binary
 
 def label_nuclei(binary: np.ndarray) -> np.ndarray:
     """
@@ -72,7 +72,7 @@ def threshold_segmentation(image: np.ndarray) -> np.ndarray:
     colored = label2rgb(labeled, bg_label=0)
     return labeled, colored
 
-def watershed_segmentation(image: np.ndarray) -> np.ndarray:
+def watershed_segmentation(image: np.ndarray, thr_method: str = 'adaptive') -> np.ndarray:
     """
     Perform nuclei segmentation using watershed to separate touching nuclei.
     
@@ -84,7 +84,7 @@ def watershed_segmentation(image: np.ndarray) -> np.ndarray:
     """
     gray = to_grayscale(image)
     blurred = smooth_image(gray)
-    binary = threshold_image(blurred)
+    binary = threshold_image(blurred, thr_method)
     distance = ndi.distance_transform_edt(binary)
     distance_smooth = cv2.GaussianBlur(distance, (15,15), 0)
 
