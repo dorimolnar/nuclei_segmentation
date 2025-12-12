@@ -57,8 +57,13 @@ def segment_and_classify(source: str, output: str) -> None:
     image = image[:crop_size, :crop_size, :]
 
     # Perform segmentation and classification
-    seg_labeled_image, seg_colored_image = watershed_segmentation(image, 'adaptive')
-    classified_image = classify_nuclei_by_brownness(image, seg_labeled_image)
+    seg_labeled_image, _ = watershed_segmentation(image, 'adaptive')
+    contour_color_pairs = classify_nuclei_by_brownness(image, seg_labeled_image)
+    
+
+    classified_image = image.copy()
+    for outline, color in contour_color_pairs:
+        cv2.drawContours(classified_image, [outline], -1, color, thickness=2)
 
     # Save the output
     save_image(output, classified_image)

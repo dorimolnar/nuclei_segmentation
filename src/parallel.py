@@ -4,6 +4,7 @@ from typing import Tuple
 import numpy as np
 import os
 from tqdm import tqdm
+import cv2
 
 from segmentation import watershed_segmentation
 from classification import classify_nuclei_by_brownness
@@ -19,7 +20,13 @@ def process_tile(tile: np.ndarray, tile_origin: Tuple[int,int], tile_inner_box: 
 
     # Run segmentation on the tile (returns labeled mask and maybe colored seg)
     labeled, _ = watershed_segmentation(tile, thr_method='adaptive')  # adapt to your function signature
-    classified_tile = classify_nuclei_by_brownness(tile, labeled)
+    # classified_tile = classify_nuclei_by_brownness(tile, labeled)
+    contour_color_pairs = classify_nuclei_by_brownness(tile, labeled)
+    classified_tile = tile.copy()
+    for outline, color in contour_color_pairs:
+        cv2.drawContours(classified_tile, [outline], -1, color, thickness=2)
+
+    
 
     iy0, ix0, iy1, ix1 = tile_inner_box
     center = classified_tile[iy0:iy1, ix0:ix1].copy()  # copy to avoid referencing shared memory

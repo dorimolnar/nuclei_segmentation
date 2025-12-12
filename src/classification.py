@@ -47,7 +47,7 @@ def smooth_contour(contour, sigma=10, pts=200):
     smoothed = np.stack([x_s, y_s], axis=1).astype(np.int32)
     return smoothed.reshape(-1, 1, 2)
 
-def draw_nucleus_outline(image, coords, bbox, color, method='contour', thickness=2):
+def find_nucleus_outline(coords, bbox, method='contour'):
 
     (min_r, min_c, max_r, max_c) = bbox
     h = max_r - min_r
@@ -94,7 +94,17 @@ def draw_nucleus_outline(image, coords, bbox, color, method='contour', thickness
     outline_smooth[:, 0, 0] += min_c  
     outline_smooth[:, 0, 1] += min_r 
 
-    cv2.drawContours(image, [outline_smooth], -1, color, thickness)
+    # Check if the contour is closed
+    p0 = outline_smooth[0, 0]
+    p_end = outline_smooth[-1, 0]
+
+    # Discard if it is not closed
+    if not np.allclose(p0, p_end, atol=2.0):
+        return None
+
+    return outline_smooth
+
+    # cv2.drawContours(image, [outline_smooth], -1, color, thickness)
 
     # Gives sharp outlines
     # approx = cv2.approxPolyDP(contour_int, 5.0, True)
@@ -102,7 +112,7 @@ def draw_nucleus_outline(image, coords, bbox, color, method='contour', thickness
 
 def classify_nuclei_by_brownness(image: np.ndarray, labeled: np.ndarray) -> np.ndarray:
     """
-    Classify nuclei by brownness and overlay 1–2 pixel outlines.
+    Classify nuclei by brownness and return outline–color pairs
 
     Parameters:
         image (np.ndarray): RGB original image
@@ -121,17 +131,23 @@ def classify_nuclei_by_brownness(image: np.ndarray, labeled: np.ndarray) -> np.n
     # Define thresholds for classes
     thresholds_percentile = np.percentile(mean_intensities, [30, 55, 75])
     thresholds = [80,120,170]
-    
+
     # Classes: 0,1,2,3
     classes = np.digitize(mean_intensities, bins=thresholds)
 
     # Prepare output image
-    output = image.copy()
+    results = []
 
     for region, class_id in zip(props, classes):
         coords = region.coords
         bbox = region.bbox
         color = CLASS_COLORS[class_id]
-        draw_nucleus_outline(output, coords, bbox, color=color, method ='contour', thickness=2)
+        outline = find_nucleus_outline(coords, bbox, method ='contour')
 
-    return output
+        if outline is None:
+            continue
+
+        results.append((outline, color))
+
+
+    return results
