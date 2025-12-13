@@ -16,7 +16,7 @@ def process_tile(tile: np.ndarray, tile_origin: Tuple[int,int], tile_inner_box: 
     """
     logging.disable(logging.CRITICAL) 
 
-    classified_tile = process_image(tile, method = 'deep_learning')
+    classified_tile = process_image(tile, method = 'watershed')
 
     iy0, ix0, iy1, ix1 = tile_inner_box
     center = classified_tile[iy0:iy1, ix0:ix1].copy()  # copy to avoid referencing shared memory

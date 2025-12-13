@@ -3,16 +3,16 @@ import cv2
 import numpy as np
 
 from nuclei_segmentation.classification import smooth_outline
+from nuclei_segmentation.classification import CLASS_COLORS
 
-#io.logger_setup()
 
-
-CLASS_COLORS = {
-    0: [255, 0, 0],       # Red
-    1: [255, 165, 0],     # Orange
-    2: [255, 255, 0],     # Yellow
-    3: [0, 0, 255],       # Blue
-}
+# For R-B based brownness metric
+# CLASS_COLORS = {
+#     3: [255, 0, 0],       # Red
+#     2: [255, 165, 0],     # Orange
+#     1: [255, 255, 0],     # Yellow
+#     0: [0, 0, 255],       # Blue
+# }
 
 def segment_cellpose(image, model):
     masks, _, _ = model.eval(image, diameter=30)
@@ -25,8 +25,28 @@ def classify_cellpose(image, mask):
     for i in range(1, n_labels+1):
         mean_intensity[i-1] = np.mean(gray[mask == i])
 
-    thresholds = [130, 150, 170]
+    thresholds = [120, 140, 160]
     classes_per_nucleus = np.digitize(mean_intensity, bins=thresholds)
+
+    # R-B based brownness metric
+    # R = image[:, :, 0]
+    # B = image[:, :, 2]
+
+    # n_labels = mask.max()
+    # brownness = np.zeros(n_labels, dtype=float)
+
+    # for i in range(1, n_labels + 1):
+    #     nucleus = (mask == i)
+    
+    #     # Brownness metric: high R, low B
+    #     brownness[i - 1] = np.mean(
+    #         (R[nucleus] - B[nucleus]) / (R[nucleus] + B[nucleus] + 1e-6)
+    #     )       
+
+    # thresholds = [0.05, 0.15, 0.3]
+    # classes_per_nucleus = np.digitize(brownness, bins=thresholds)
+
+
 
     outlines_list = utils.outlines_list_multi(mask)
 

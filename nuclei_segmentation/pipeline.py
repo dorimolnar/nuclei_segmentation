@@ -13,11 +13,11 @@ from nuclei_segmentation.process import process_image
 import logging
 
 # Configure logging
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s [%(levelname)s] %(message)s',
-    datefmt='%H:%M:%S'
-)
+# logging.basicConfig(
+#     level=logging.INFO,
+#     format='%(asctime)s [%(levelname)s] %(message)s',
+#     datefmt='%H:%M:%S'
+# )
 
 logger = logging.getLogger(__name__)
 
@@ -85,7 +85,7 @@ def segment_and_classify(source, output, method='watershed'):
     image = load_image(source)
 
     logger.info("Cropping image...")
-    image = crop_image(image, crop_size=8000)
+    image = crop_image(image, crop_size=2000)
     
     classified_image = process_image(image, method = method)
 

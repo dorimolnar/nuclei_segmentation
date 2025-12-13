@@ -99,7 +99,7 @@ def find_nucleus_outline(coords, bbox, method='contour'):
         raise ValueError(f"Unknown method: {method}")
     
     # Discard too short outlines
-    if outline.shape[0] < 10:
+    if outline.shape[0] < 4:
         return None
 
     # Smooth the outline
@@ -108,12 +108,6 @@ def find_nucleus_outline(coords, bbox, method='contour'):
     # Shift back to original image coordinates
     outline_smooth[:, 0, 0] += min_c  
     outline_smooth[:, 0, 1] += min_r 
-
-    # Discard if the outline is not closed
-    p0 = outline_smooth[0, 0]
-    p_end = outline_smooth[-1, 0]
-    if not np.allclose(p0, p_end, atol=2.0):
-        return None
 
     return outline_smooth
 
@@ -150,9 +144,17 @@ def classify_nuclei_by_brownness(image, labeled):
     # Prepare output image
     outline_color_pairs = []
 
+    H, W = image.shape[:2]
+
     for region, class_id in zip(props, classes):
         coords = region.coords
         bbox = region.bbox
+        (min_r, min_c, max_r, max_c) = bbox
+
+        # Discard nuclei touching image border (likely cut)
+        if min_r == 0 or min_c == 0 or max_r >= H or max_c >= W:
+            continue
+        
         color = CLASS_COLORS[class_id]
         outline = find_nucleus_outline(coords, bbox, method ='contour')
 
