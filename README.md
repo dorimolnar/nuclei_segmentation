@@ -7,13 +7,13 @@ A Python package for **segmenting, classifying, and visualizing nuclei** in micr
 ## Features
 
 - Segment nuclei in microscopy images using:
-  - **Watershed (analytical, parallelizable, fast)**
-  - **Deep learning (Cellpose, more accurate but slower)**
+  - **Watershed (analytical, parallelizable with tiling, fast)**
+  - **Deep learning (Cellpose, more accurate but slower, not parallelized)**
 - Classify nuclei based on **brownness levels**.
 - Visualize classified nuclei with colored outlines.
 - CLI for batch processing of images.
-- Parallel processing for large images using tiling.
 
+> **Remark:** Parallelizing the watershed segmentation brings a 5–6× improvement in processing speed.
 ---
 
 ## Installation
@@ -73,4 +73,6 @@ The notebooks/example_notebook.ipynb shows how to:
 - Visualize intermediate results (masks, outlines, classification colors)
 
 This is useful for exploring how parameters affect segmentation or for creating custom visualizations.
+
+Remark: Parallelizing the watershed segmentation brings a 5-6x improvement.
 
