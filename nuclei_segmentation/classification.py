@@ -19,7 +19,7 @@ CLASS_COLORS = {
 
 
 
-def smooth_outline(outline, sigma=10, pts=200):
+def smooth_outline(outline: np.ndarray, sigma: int = 10, pts: int = 200) -> np.ndarray:
     """
     Smooths the outline using cubic spline interpolation and Gaussian filtering.
     
@@ -57,7 +57,7 @@ def smooth_outline(outline, sigma=10, pts=200):
     smoothed = np.stack([x_s, y_s], axis=1).astype(np.int32)
     return smoothed.reshape(-1, 1, 2)
 
-def find_nucleus_outline(coords, bbox, method='contour'):
+def find_nucleus_outline(coords: np.ndarray, bbox: tuple[int, int, int, int], method: str = 'contour') -> np.ndarray | None:
     """
     Finds the outline of one nucleus given its coordinates and bounding box.
     
@@ -123,7 +123,7 @@ def find_nucleus_outline(coords, bbox, method='contour'):
     # approx = cv2.approxPolyDP(contour_int, 5.0, True)
     # cv2.drawContours(image, contours, -1, color=color, thickness=thickness)
 
-def classify_nuclei_by_brownness(image, labeled):
+def classify_nuclei_by_brownness(image: np.ndarray, labeled: np.ndarray) -> list[tuple[np.ndarray, tuple[int, int, int]]]:
     """
     Classify nuclei by brownness and return outline–color pairs
 

@@ -9,7 +9,7 @@ from skimage.color import label2rgb
 from skimage.feature import peak_local_max
 from skimage.segmentation import watershed
 
-def to_grayscale(image):
+def to_grayscale(image: np.ndarray) -> np.ndarray:
     """
     Convert an RGB image to grayscale.
     
@@ -22,7 +22,7 @@ def to_grayscale(image):
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     return gray
 
-def smooth_image(gray, kernel_size=5):
+def smooth_image(gray: np.ndarray, kernel_size: int = 5) -> np.ndarray:
     """
     Apply Gaussian blur to a grayscale image.
     
@@ -39,7 +39,7 @@ def smooth_image(gray, kernel_size=5):
     blurred = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
     return blurred
 
-def threshold_image(gray, thr_method='adaptive'):
+def threshold_image(gray: np.ndarray, thr_method: str = 'adaptive') -> np.ndarray:
     """
     Apply Otsu/Adaptive thresholding to grayscale image.
     
@@ -61,7 +61,7 @@ def threshold_image(gray, thr_method='adaptive'):
     binary = (binary == 0).astype(np.uint8)
     return binary
 
-def label_nuclei(binary):
+def label_nuclei(binary: np.ndarray) -> np.ndarray:
     """
     Label connected components in a binary image.
     
@@ -74,7 +74,7 @@ def label_nuclei(binary):
     labeled, _ = ndi.label(binary)
     return labeled
 
-def threshold_segmentation(image):
+def threshold_segmentation(image: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
     """
     Perform nuclei segmentation using simple thresholding.
     
@@ -92,7 +92,7 @@ def threshold_segmentation(image):
     colored = label2rgb(labeled, bg_label=0)
     return labeled, colored
 
-def watershed_segmentation(image, thr_method='adaptive'):
+def watershed_segmentation(image: np.ndarray, thr_method: str = 'adaptive') -> tuple[np.ndarray, np.ndarray]:
     """
     Perform nuclei segmentation using watershed to separate touching nuclei.
     

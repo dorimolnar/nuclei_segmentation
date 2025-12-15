@@ -1,4 +1,5 @@
 import cv2
+import numpy as np
 import logging
 
 from nuclei_segmentation.process import process_image, process_image_in_parallel
@@ -7,7 +8,7 @@ from nuclei_segmentation.process import process_image, process_image_in_parallel
 logger = logging.getLogger(__name__)
 
 
-def load_image(path):
+def load_image(path: str) -> np.ndarray:
     """
     Loads an RGB image from the given path using OpenCV.
 
@@ -26,7 +27,7 @@ def load_image(path):
     image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
     return image
 
-def save_image(path, image):
+def save_image(path: str, image: np.ndarray):
     """
     Saves an RGB image to the given path using OpenCV.
 
@@ -43,7 +44,7 @@ def save_image(path, image):
     except Exception as e:
         raise IOError(f"An error occurred while saving the image: {e}")
     
-def crop_image(image, crop_size=2000):
+def crop_image(image: np.ndarray, crop_size: int = 2000) -> np.ndarray:
     """
     Crops the image to the specified size from the top-left corner.
 
@@ -58,7 +59,7 @@ def crop_image(image, crop_size=2000):
     
 
 
-def segment_and_classify(source, output, method='watershed'):
+def segment_and_classify(source: str, output: str, method: str = 'watershed'):
     """
     Segments and classifies nuclei in the given image.
 
@@ -81,7 +82,7 @@ def segment_and_classify(source, output, method='watershed'):
     logger.info("Segmentation and classification finished")
 
 
-def segment_and_classify_parallel(source, output, tile_size=2000, overlap=200, workers=None):
+def segment_and_classify_parallel(source: str, output: str, tile_size: int = 2000, overlap: int = 200, workers: int | None = None):
     """
     Segments and classifies nuclei in a large image using parallel processing.
 

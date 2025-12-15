@@ -1,5 +1,6 @@
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
+import numpy as np
 from tqdm import tqdm
 import logging
 from cellpose import models
@@ -12,7 +13,7 @@ from nuclei_segmentation.cellpose_seg import segment_cellpose, classify_cellpose
 
 logger = logging.getLogger(__name__)
 
-def process_image(image, method = 'watershed'):
+def process_image(image: np.ndarray, method: str = 'watershed') -> np.ndarray:
     """
     Segments and classifies nuclei in the given image.
     Parameters:
@@ -42,7 +43,7 @@ def process_image(image, method = 'watershed'):
 
 
 
-def process_tile_for_outlines(tile):
+def process_tile_for_outlines(tile: np.ndarray) -> list[tuple[np.ndarray, tuple[int, int, int]]]:
     """
     Process a single tile: segment and classify nuclei, returning outline-color pairs.
     Parameters:
@@ -61,7 +62,10 @@ def process_tile_for_outlines(tile):
     return outline_color_pairs
 
 
-def process_image_in_parallel(image, tile_size = 1024, overlap = 200, max_workers = None):
+def process_image_in_parallel(image: np.ndarray, 
+                              tile_size: int = 1024,
+                              overlap: int = 200,
+                              max_workers: int | None = None) -> np.ndarray:
     """
     Process the image in tiles using parallel processing (with watershed segmentation), extracting only outline-color pairs.
     All outlines are drawn at the end on a full-size image.

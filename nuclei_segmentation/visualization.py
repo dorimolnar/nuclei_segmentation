@@ -2,11 +2,11 @@
 Functions to visualize images and draw colored outlines on nuclei.
 """
 
-
+import numpy as np
 import matplotlib.pyplot as plt
 import cv2
 
-def visualize_image(image):
+def visualize_image(image: np.ndarray):
     """
     Visualizes an image using Matplotlib.
 
@@ -17,7 +17,7 @@ def visualize_image(image):
     plt.axis('off')
     plt.show()
 
-def draw_outlines(image, outline_color_pairs, thickness=2):
+def draw_outlines(image: np.ndarray, outline_color_pairs: list[tuple[np.ndarray, tuple[int, int, int]]], thickness: int = 2) -> np.ndarray:
     """
     Draws outlines on the image.
 
