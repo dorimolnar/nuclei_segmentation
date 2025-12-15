@@ -8,13 +8,13 @@ setup(
     packages=find_packages(),
     python_requires=">=3.10,<3.11",
     install_requires=[
-        "numpy",
-        "scikit-image",
-        "opencv-python",
-        "matplotlib",
-        "scipy",
-        "tqdm",
-        "cellpose",
+        "numpy==2.2.6",
+        "scikit-image==0.25.2",
+        "opencv-python==4.12.0.88",
+        "matplotlib==3.10.8",
+        "scipy==1.15.3",
+        "tqdm==4.67.1",
+        "cellpose==4.0.8",
     ],
     entry_points={
         "console_scripts": [

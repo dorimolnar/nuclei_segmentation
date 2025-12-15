@@ -74,5 +74,5 @@ The notebooks/example_notebook.ipynb shows how to:
 
 This is useful for exploring how parameters affect segmentation or for creating custom visualizations.
 
-Remark: Parallelizing the watershed segmentation brings a 5-6x improvement.
+> **Remark:** The package was developed and tested with the dependency versions listed in `setup.py`.
 
