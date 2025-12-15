@@ -38,8 +38,8 @@ def save_image(path, image):
     bgr_image = cv2.cvtColor(image, cv2.COLOR_RGB2BGR)
     
     try:
-        cv2.imwrite(path, bgr_image)
-        # cv2.imwrite(path, bgr_image, [cv2.IMWRITE_JPEG_QUALITY, 85]) # To make the file smaller
+        # cv2.imwrite(path, bgr_image)
+        cv2.imwrite(path, bgr_image, [cv2.IMWRITE_JPEG_QUALITY, 85]) # To make the file smaller
     except Exception as e:
         raise IOError(f"An error occurred while saving the image: {e}")
     
