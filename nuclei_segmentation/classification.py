@@ -1,3 +1,7 @@
+"""
+Functions for classifying segmented nuclei by brownness and extracting smooth outlines for visualization.
+"""
+
 import numpy as np
 from skimage.measure import regionprops
 from scipy.interpolate import interp1d
@@ -32,6 +36,10 @@ def smooth_outline(outline, sigma=10, pts=200):
     outline = outline.astype(np.float32)
 
     kind = 'cubic'
+
+    # Cubic interpolation needs at least 4 points
+    if outline.shape[0] < 4:
+        return outline
 
     # Interpolate to make uniformly sampled curve
     t = np.linspace(0, 1, len(outline))
@@ -124,8 +132,11 @@ def classify_nuclei_by_brownness(image, labeled):
         labeled (np.ndarray): Labeled image (0=background, 1,2,...=nuclei)
 
     Returns:
-        np.ndarray: RGB image with nuclei outlines colored by class
+        list: List of (outline, color) pairs
     """
+
+    if labeled.max() == 0:
+        return []
 
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY) # 0: black, 255: white
     props = regionprops(labeled, intensity_image=gray)
@@ -133,8 +144,8 @@ def classify_nuclei_by_brownness(image, labeled):
     # Collect mean intensity of each nucleus
     mean_intensities = np.array([region.mean_intensity for region in props])
 
-    # Define thresholds for classes
-    thresholds_percentile = np.percentile(mean_intensities, [30, 55, 75])
+    # Define thresholds for classes (Darker = lower)
+    # thresholds_percentile = np.percentile(mean_intensities, [30, 55, 75])
     thresholds = [120,135,150]
 
     # Classes: 0,1,2,3

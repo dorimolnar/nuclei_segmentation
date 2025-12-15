@@ -1,3 +1,8 @@
+"""
+Functions to visualize images and draw colored outlines on nuclei.
+"""
+
+
 import matplotlib.pyplot as plt
 import cv2
 

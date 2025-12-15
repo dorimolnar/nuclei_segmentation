@@ -1,3 +1,7 @@
+"""
+Functions for nuclei segmentation using thresholding and watershed methods.
+"""
+
 import cv2
 import numpy as np
 import scipy.ndimage as ndi
@@ -29,6 +33,9 @@ def smooth_image(gray, kernel_size=5):
     Returns:
         np.ndarray: Smoothed image
     """
+    # Ensure kernel size is odd
+    if kernel_size % 2 == 0:
+        kernel_size += 1
     blurred = cv2.GaussianBlur(gray, (kernel_size, kernel_size), 0)
     return blurred
 
@@ -50,8 +57,8 @@ def threshold_image(gray, thr_method='adaptive'):
     else:
         raise ValueError(f"Unknown thresholding method: {thr_method}")
 
-    # Convert to 0 and 1
-    binary = 1 - (binary // 255)
+    # Convert to 0 = background, 1 = nuclei
+    binary = (binary == 0).astype(np.uint8)
     return binary
 
 def label_nuclei(binary):
@@ -76,7 +83,7 @@ def threshold_segmentation(image):
 
     Returns:
         np.ndarray: Labeled mask (0 = background, 1,2,... = nuclei)
-        np.ndarray: Colored labeled mask for visualization
+        np.ndarray: Colored labeled mask only for visualization
     """
     gray = to_grayscale(image)
     blurred = smooth_image(gray)
@@ -95,7 +102,7 @@ def watershed_segmentation(image, thr_method='adaptive'):
 
     Returns:
         np.ndarray: Labeled mask (0 = background, 1,2,... = nuclei)
-        np.ndarray: Colored labeled mask for visualization
+        np.ndarray: Colored labeled mask only for visualization
     """
     gray = to_grayscale(image)
     blurred = smooth_image(gray)
@@ -104,10 +111,10 @@ def watershed_segmentation(image, thr_method='adaptive'):
     distance_smooth = cv2.GaussianBlur(distance, (15,15), 0)
 
     coords = peak_local_max(distance_smooth, min_distance = 30, labels=binary, footprint=np.ones((5, 5)))
-    markers = np.zeros_like(distance, dtype=int)
+    markers = np.zeros_like(distance_smooth, dtype=int)
     for i, (y, x) in enumerate(coords, 1):
         markers[y, x] = i
     
-    labeled = watershed(-distance, markers, mask=binary)
+    labeled = watershed(-distance_smooth, markers, mask=binary)
     colored = label2rgb(labeled, bg_label=0)
     return labeled, colored

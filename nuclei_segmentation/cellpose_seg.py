@@ -1,3 +1,8 @@
+"""
+Cellpose-based segmentation and classification utilities.
+"""
+
+
 from cellpose import utils
 import cv2
 import numpy as np
@@ -14,7 +19,7 @@ from nuclei_segmentation.classification import CLASS_COLORS
 #     0: [0, 0, 255],       # Blue
 # }
 
-def segment_cellpose(image, model):
+def segment_cellpose(image, model, diameter=30):
     """
     Segment nuclei in the image using Cellpose model.
     Parameters:
@@ -23,7 +28,7 @@ def segment_cellpose(image, model):
     Returns:
         np.ndarray: Labeled mask (0 = background, 1,2,... = nuclei)
     """
-    masks, _, _ = model.eval(image, diameter=30)
+    masks, _, _ = model.eval(image, diameter=diameter)
     return masks
 
 def classify_cellpose(image, mask):
@@ -39,10 +44,13 @@ def classify_cellpose(image, mask):
     """
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     n_labels = mask.max()
+    if n_labels == 0:
+        return []
     mean_intensity = np.zeros(n_labels, dtype=float)
     for i in range(1, n_labels+1):
         mean_intensity[i-1] = np.mean(gray[mask == i])
 
+    # Darker = lower
     thresholds = [120, 140, 160]
     classes_per_nucleus = np.digitize(mean_intensity, bins=thresholds)
 
@@ -71,7 +79,7 @@ def classify_cellpose(image, mask):
     outline_color_pairs = []
     for i, outline in enumerate(outlines_list):
         if outline.shape[0] < 4:
-            return None
+            continue
         
         class_id = classes_per_nucleus[i]       
         color = CLASS_COLORS[class_id]

@@ -8,11 +8,9 @@ logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s | %(levelname)s | %(message)s",
 )
-
 logger = logging.getLogger(__name__)
 
 def main():
-    start_time = time.time()
     parser = argparse.ArgumentParser(
         description="Segment and classify nuclei in microscopy images."
     )
@@ -24,26 +22,18 @@ def main():
         default="watershed",
         help="Segmentation method (default: watershed)",
     )
-    # Possible other options for tile size and overlap
-    # parser.add_argument(
-    #     "--tile_size",
-    #     type=int,
-    #     default=2000,
-    #     help="Tile size for large image segmentation",
-    # )
-    # parser.add_argument(
-    #     "--overlap",
-    #     type=int,
-    #     default=200,
-    #     help="Tile overlap for parallel processing",
-    # )
+    # Placeholder for future options:
+    # parser.add_argument("--tile_size", type=int, default=2000, help="Tile size for parallel processing")
+    # parser.add_argument("--overlap", type=int, default=200, help="Tile overlap for parallel processing")
+
     args = parser.parse_args()
 
-    if args.method == "watershed":
-        segment_and_classify_parallel(args.input, args.output)
-    else:  # args.method == "deep_learning"
-        segment_and_classify(args.input, args.output, method='deep_learning')
-    
-    end_time = time.time()
-    elapsed = end_time - start_time
-    logger.info(f"Processing time: {elapsed:.2f} seconds")
+    start_time = time.time()
+    try:
+        if args.method == "watershed":
+            segment_and_classify_parallel(args.input, args.output)
+        else:  # deep_learning
+            segment_and_classify(args.input, args.output, method='deep_learning')
+    finally:
+        elapsed = time.time() - start_time
+        logger.info(f"Processing time: {elapsed:.2f} seconds")
