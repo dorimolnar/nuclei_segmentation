@@ -15,10 +15,28 @@ from nuclei_segmentation.classification import CLASS_COLORS
 # }
 
 def segment_cellpose(image, model):
+    """
+    Segment nuclei in the image using Cellpose model.
+    Parameters:
+        image (np.ndarray): RGB input image
+        model (CellposeModel): Preloaded Cellpose model
+    Returns:
+        np.ndarray: Labeled mask (0 = background, 1,2,... = nuclei)
+    """
     masks, _, _ = model.eval(image, diameter=30)
     return masks
 
 def classify_cellpose(image, mask):
+    """
+    Classify nuclei by brownness and return outline–color pairs
+
+    Parameters:
+        image (np.ndarray): RGB original image
+        mask (np.ndarray): Labeled mask (0=background, 1,2,...=nuclei)
+
+    Returns:
+        list: List of (outline, color) pairs
+    """
     gray = cv2.cvtColor(image, cv2.COLOR_RGB2GRAY)
     n_labels = mask.max()
     mean_intensity = np.zeros(n_labels, dtype=float)
@@ -52,20 +70,15 @@ def classify_cellpose(image, mask):
 
     outline_color_pairs = []
     for i, outline in enumerate(outlines_list):
-        if outline.shape[0] < 10:
+        if outline.shape[0] < 4:
             return None
         
         class_id = classes_per_nucleus[i]       
         color = CLASS_COLORS[class_id]
 
-        # Smooth the outline
-        outline_smooth = smooth_outline(outline, sigma=10)
+        # Smooth the outline - not needed
+        # outline_smooth = smooth_outline(outline, sigma=10)
 
-        # Discard if the outline is not closed
-        p0 = outline_smooth[0, 0]
-        p_end = outline_smooth[-1, 0]
-        if not np.allclose(p0, p_end, atol=2.0):
-            return None
 
         outline_color_pairs.append((outline, color))
     

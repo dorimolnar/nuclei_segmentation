@@ -3,12 +3,12 @@ import cv2
 
 def visualize_image(image):
     """
-    Visualizes an RGB image using Matplotlib.
+    Visualizes an image using Matplotlib.
 
     Parameters:
-        image (np.ndarray): Image array in RGB format (H, W, 3).
+        image (np.ndarray): Image array in RGB/grayscale format (H, W, 3) or (H, W).
     """
-    plt.imshow(image)
+    plt.imshow(image, cmap = 'gray')
     plt.axis('off')
     plt.show()
 
@@ -18,7 +18,7 @@ def draw_outlines(image, outline_color_pairs, thickness=2):
 
     Parameters:
         image (np.ndarray): RGB image
-        outline_color_pairs (list): List of (outline, color) tuples
+        outline_color_pairs (list): List of (outline: np.ndarray(N,1,2), color) tuples
         thickness (int): Thickness of the outline
 
     Returns:

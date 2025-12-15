@@ -1,23 +1,8 @@
 import cv2
-import time
-
-from cellpose import models
-
-from nuclei_segmentation.segmentation import threshold_segmentation, watershed_segmentation
-from nuclei_segmentation.classification import classify_nuclei_by_brownness
-from nuclei_segmentation.parallel import process_image_in_parallel
-from nuclei_segmentation.cellpose_seg import segment_cellpose, classify_cellpose
-from nuclei_segmentation.visualization import draw_outlines
-from nuclei_segmentation.process import process_image
-
 import logging
 
-# Configure logging
-# logging.basicConfig(
-#     level=logging.INFO,
-#     format='%(asctime)s [%(levelname)s] %(message)s',
-#     datefmt='%H:%M:%S'
-# )
+from nuclei_segmentation.process import process_image, process_image_in_parallel
+
 
 logger = logging.getLogger(__name__)
 
@@ -54,6 +39,7 @@ def save_image(path, image):
     
     try:
         cv2.imwrite(path, bgr_image)
+        # cv2.imwrite(path, bgr_image, [cv2.IMWRITE_JPEG_QUALITY, 85]) # To make the file smaller
     except Exception as e:
         raise IOError(f"An error occurred while saving the image: {e}")
     
@@ -117,14 +103,3 @@ def segment_and_classify_parallel(source, output, tile_size=2000, overlap=200, w
     save_image(output, classified_image)
 
     logger.info("Segmentation and classification finished")
-
-
-
-if __name__ == "__main__":
-    start_time = time.time()
-
-    segment_and_classify_parallel("../example/input.jpg", "../notebooks/classified_output_parallel.jpg")
-
-    end_time = time.time()
-    elapsed = end_time - start_time
-    logger.info(f"Processing time: {elapsed:.2f} seconds")

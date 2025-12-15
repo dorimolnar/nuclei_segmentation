@@ -1,6 +1,5 @@
 import numpy as np
 from skimage.measure import regionprops
-from skimage import measure
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
 import cv2
