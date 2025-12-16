@@ -1,26 +1,29 @@
 import numpy as np
 from nuclei_segmentation.classification import classify_nuclei_by_brownness
 
-def test_brownness_classification_order():
+def test_returns_one_outline_per_label():
     image = np.zeros((100, 100, 3), dtype=np.uint8)
-
-    # 2 fake nuclei
     labels = np.zeros((100, 100), dtype=int)
-    labels[10:30, 10:30] = 1  
-    labels[50:80, 50:80] = 2 
-
-    image[10:30, 10:30] = [50, 50, 50]    # dark
-    image[50:80, 50:80] = [200, 200, 200] # bright
+    labels[10:20, 10:20] = 1
+    labels[30:40, 30:40] = 2
 
     outlines = classify_nuclei_by_brownness(image, labels)
 
-    assert len(outlines) == 2
+    assert len(outlines) == 2 # one outline per nucleus
 
-def test_outline_generation():
+def test_brownness_affects_color_assignment():
     image = np.zeros((64, 64, 3), dtype=np.uint8)
     labels = np.zeros((64, 64), dtype=int)
-    labels[20:40, 20:40] = 1
+
+    labels[10:20, 10:20] = 1
+    labels[30:40, 30:40] = 2
+
+    image[10:20, 10:20] = [40, 40, 40]    # dark
+    image[30:40, 30:40] = [220, 220, 220] # bright
 
     outlines = classify_nuclei_by_brownness(image, labels)
 
-    assert outlines is not None
+    _, color1 = outlines[0]
+    _, color2 = outlines[1]
+
+    assert color1 != color2 # different brownness (darkness) should yield different colors

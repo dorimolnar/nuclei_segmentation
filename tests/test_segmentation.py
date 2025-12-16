@@ -7,5 +7,5 @@ def test_watershed_output_shape():
 
     labels, _ = watershed_segmentation(image)
 
-    assert labels.shape == image.shape[:2]
+    assert labels.shape == image.shape[:2] # check shape matches input image
     assert labels.max() >= 1  # at least one nucleus detected
